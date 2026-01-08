@@ -26,6 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 public class ReportDetailServiceTest {
 
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Path;
+
+    @TempDir
+    Path tempDir;
+
     @Mock
     private CarRepository carRepository;
 
@@ -41,9 +47,7 @@ public class ReportDetailServiceTest {
     @InjectMocks
     private ReportDetailService reportDetailService;
 
-
-    static final String storageUrl = "D:/gli/storage/";
-
+    
     @Test
     @DisplayName("should return success generate service")
     public void generate() throws ParseException, IOException {
@@ -53,7 +57,8 @@ public class ReportDetailServiceTest {
                 .createdDate(new Date())
                 .status("GENERATED")
                 .build();
-        when(env.getProperty("download.storage")).thenReturn(storageUrl);
+        when(env.getProperty("download.storage"))
+        .thenReturn(tempDir.toAbsolutePath().toString() + "/");
         reportDetailRepository.save(reportDetail);
         String result = reportDetailService.generate(createdDate, manufactur);
         assertEquals("SUCCESS", result);
@@ -67,7 +72,8 @@ public class ReportDetailServiceTest {
                 .createdDate(new Date())
                 .status("GENERATED")
                 .build();
-        when(env.getProperty("download.storage")).thenReturn(storageUrl);
+        when(env.getProperty("download.storage"))
+        .thenReturn(tempDir.toAbsolutePath().toString() + "/");
         reportDetailRepository.save(reportDetail);
         String result = reportDetailService.generate(null, null);
         assertEquals("SUCCESS", result);
