@@ -7,6 +7,7 @@ import com.rnd.springboot3.repository.ReportDetailRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.core.env.Environment;
@@ -14,20 +15,18 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 public class ReportDetailServiceTest {
-
-import org.junit.jupiter.api.io.TempDir;
-import java.nio.file.Path;
 
     @TempDir
     Path tempDir;
@@ -47,23 +46,22 @@ import java.nio.file.Path;
     @InjectMocks
     private ReportDetailService reportDetailService;
 
-    
     @Test
     @DisplayName("should return success generate service")
     public void generate() throws ParseException, IOException {
-        String createdDate = "2023-04-01";
-        String manufactur = "Toyota";
         ReportDetail reportDetail = ReportDetail.builder()
                 .createdDate(new Date())
                 .status("GENERATED")
                 .build();
+
         when(env.getProperty("download.storage"))
-        .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+                .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+
         reportDetailRepository.save(reportDetail);
-        String result = reportDetailService.generate(createdDate, manufactur);
+
+        String result = reportDetailService.generate("2023-04-01", "Toyota");
         assertEquals("SUCCESS", result);
     }
-
 
     @Test
     @DisplayName("should return success generate_nullParam service")
@@ -72,9 +70,12 @@ import java.nio.file.Path;
                 .createdDate(new Date())
                 .status("GENERATED")
                 .build();
+
         when(env.getProperty("download.storage"))
-        .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+                .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+
         reportDetailRepository.save(reportDetail);
+
         String result = reportDetailService.generate(null, null);
         assertEquals("SUCCESS", result);
     }
@@ -86,12 +87,18 @@ import java.nio.file.Path;
         String createDate = "01/Apr/2024 12:00:00";
         String manufactur = "Toyota";
 
-        SimpleDateFormat DB_FORMATTER = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+        Date date = formatter.parse(createDate);
 
-        Date date = DB_FORMATTER.parse(createDate);
-        when(env.getProperty("download.storage")).thenReturn(storageUrl);
-        when(carRepository.getCarList(date, manufactur)).thenReturn(carList(date));
-        ReportDetail result = reportDetailService.generateExcel(reportDetail, createDate, manufactur);
+        when(env.getProperty("download.storage"))
+                .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+
+        when(carRepository.getCarList(date, manufactur))
+                .thenReturn(carList(date));
+
+        ReportDetail result =
+                reportDetailService.generateExcel(reportDetail, createDate, manufactur);
+
         assertNotNull(result);
     }
 
@@ -100,12 +107,19 @@ import java.nio.file.Path;
     public void generateExcel_null_Parameter() throws ParseException, IOException {
         ReportDetail reportDetail = new ReportDetail();
         String createDate = "01/Apr/2024 12:00:00";
-        SimpleDateFormat DB_FORMATTER = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
-        Date date = DB_FORMATTER.parse(createDate);
 
-        when(env.getProperty("download.storage")).thenReturn(storageUrl);
-        when(carRepository.findAll()).thenReturn(carList(date));
-        ReportDetail result = reportDetailService.generateExcel(reportDetail, null, null);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+        Date date = formatter.parse(createDate);
+
+        when(env.getProperty("download.storage"))
+                .thenReturn(tempDir.toAbsolutePath().toString() + "/");
+
+        when(carRepository.findAll())
+                .thenReturn(carList(date));
+
+        ReportDetail result =
+                reportDetailService.generateExcel(reportDetail, null, null);
+
         assertNotNull(result);
     }
 
