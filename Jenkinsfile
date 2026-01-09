@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                // Gunakan repo hasil fork Anda
+                // Gunakan repo hasil fork
                 checkout scmGit(branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/hakm2002/rnd-spring-boot-3.git']])
                 sh 'mvn clean install -DskipTests'
             }
@@ -45,7 +45,7 @@ pipeline {
         stage('Docker Push') {
             steps {
                 script {
-                    // 'dockerhub-pwd' adalah ID di Jenkins Credentials (Type: Username with password)
+                    // 'dockerhub-pwd' ID di Jenkins Credentials (Type: Username with password)
                     docker.withRegistry('', 'dockerhub-pwd') {
                         sh "docker push ${DOCKER_IMAGE}:latest"
                     }
